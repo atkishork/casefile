@@ -12,7 +12,7 @@ export const site = {
   // Path to a photo in /public, e.g. "/profile.jpg" — drop the file in
   // public/ and set this. Leave blank for a monogram placeholder instead.
   avatar: "/profile.jpg",
-  domain: "casefile.example.com", // TODO: replace with your real domain once deployed
+  domain: "casefilectf.vercel.app", // TODO: replace with your real domain once deployed
   summary:
     "I break things in controlled environments and write down exactly how. This is my running case log of CTF writeups — web exploitation, injection, crypto, reversing — plus the background that got me here.",
   email: "kishorkumar83076@gmail.com", // TODO: your real email
