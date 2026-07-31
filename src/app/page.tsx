@@ -11,6 +11,10 @@ export default function Home() {
   const categories = Array.from(new Set(writeups.map((w) => w.category)));
   const latest = writeups[0];
 
+  const tagCounts = new Map<string, number>();
+  writeups.forEach((w) => w.tags.forEach((t) => tagCounts.set(t, (tagCounts.get(t) ?? 0) + 1)));
+  const sortedTags = Array.from(tagCounts.entries()).sort((a, b) => b[1] - a[1]);
+
   return (
     <div>
       {/* ---------------------------------------------------------------- */}
@@ -114,6 +118,30 @@ export default function Home() {
       </section>
 
       {/* ---------------------------------------------------------------- */}
+      {/* Browse by tag                                                     */}
+      {/* ---------------------------------------------------------------- */}
+      {sortedTags.length > 0 && (
+        <section className="border-t border-line">
+          <div className="mx-auto max-w-5xl px-5 py-16 sm:px-8">
+            <h2 className="font-display text-lg font-semibold uppercase tracking-[0.1em] text-paper">
+              Browse by tag
+            </h2>
+            <div className="mt-6 flex flex-wrap gap-2">
+              {sortedTags.map(([tag, count]) => (
+                <Link
+                  key={tag}
+                  href={`/writeups?tag=${encodeURIComponent(tag)}`}
+                  className="rounded-sm border border-line px-3 py-1.5 font-display text-xs text-muted transition-all duration-150 hover:border-stamp-dim hover:text-paper active:scale-[0.97]"
+                >
+                  #{tag} <span className="text-stamp-bright">({count})</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ---------------------------------------------------------------- */}
       {/* Dossier teaser                                                    */}
       {/* ---------------------------------------------------------------- */}
       <section className="border-t border-line">
@@ -121,20 +149,14 @@ export default function Home() {
           <h2 className="font-display text-lg font-semibold uppercase tracking-[0.1em] text-paper">
             Skills &amp; focus areas
           </h2>
-          <div className="mt-6 grid gap-6 sm:grid-cols-3">
-            {about.skills.map((f) => (
-              <div key={f.group}>
-                <h3 className="font-display text-xs uppercase tracking-[0.1em] text-stamp">
-                  {f.group}
-                </h3>
-                <ul className="mt-2 space-y-1.5">
-                  {f.items.map((item) => (
-                    <li key={item} className="text-sm text-muted">
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+          <div className="mt-6 flex flex-wrap gap-2">
+            {about.skills.map((skill) => (
+              <span
+                key={skill}
+                className="rounded-sm border border-line px-2.5 py-1 text-sm text-muted"
+              >
+                {skill}
+              </span>
             ))}
           </div>
           <Link

@@ -77,3 +77,69 @@ export async function putFile(path: string, base64Content: string, message: stri
     throw new Error(`GitHub API error committing ${path}: ${res.status} ${await res.text()}`);
   }
 }
+
+interface DirEntry {
+  name: string;
+  path: string;
+  sha: string;
+  type: string;
+}
+
+/** Lists a directory's contents. Returns [] if the directory doesn't exist. */
+export async function listDirectory(path: string): Promise<DirEntry[]> {
+  const env = getGithubEnv();
+  const res = await fetch(
+    `${API_BASE}/repos/${env.owner}/${env.repo}/contents/${encodePath(path)}?ref=${env.branch}`,
+    {
+      headers: {
+        Authorization: `Bearer ${env.token}`,
+        Accept: "application/vnd.github+json",
+      },
+      cache: "no-store",
+    }
+  );
+  if (res.status === 404) return [];
+  if (!res.ok) {
+    throw new Error(`GitHub API error listing ${path}: ${res.status} ${await res.text()}`);
+  }
+  const data = await res.json();
+  return Array.isArray(data) ? data : [];
+}
+
+async function deleteFileWithSha(path: string, sha: string, message: string, env: GithubEnv): Promise<void> {
+  const res = await fetch(`${API_BASE}/repos/${env.owner}/${env.repo}/contents/${encodePath(path)}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${env.token}`,
+      Accept: "application/vnd.github+json",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ message, sha, branch: env.branch }),
+  });
+  if (!res.ok) {
+    throw new Error(`GitHub API error deleting ${path}: ${res.status} ${await res.text()}`);
+  }
+}
+
+/** Deletes a single file. A no-op (not an error) if the file doesn't exist. */
+export async function deleteFile(path: string, message: string): Promise<void> {
+  const env = getGithubEnv();
+  const sha = await getFileSha(path, env);
+  if (!sha) return;
+  await deleteFileWithSha(path, sha, message, env);
+}
+
+/**
+ * Deletes every file inside a directory (used to remove a writeup's image
+ * folder). The GitHub Contents API has no "delete folder" call, so this
+ * deletes each file individually. A no-op if the directory doesn't exist.
+ */
+export async function deleteDirectory(path: string, message: string): Promise<void> {
+  const env = getGithubEnv();
+  const entries = await listDirectory(path);
+  for (const entry of entries) {
+    if (entry.type === "file") {
+      await deleteFileWithSha(entry.path, entry.sha, message, env);
+    }
+  }
+}

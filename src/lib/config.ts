@@ -3,6 +3,8 @@
 // the codebase should need touching to update your name, bio, or links.
 // ---------------------------------------------------------------------------
 
+import type { Tool, Achievement } from "./types";
+
 export const site = {
   name: "Kishor Kumar",
   handle: "blink0x",
@@ -15,14 +17,14 @@ export const site = {
   domain: "casefile.example.com", // TODO: replace with your real domain once deployed
   summary:
     "I break things in controlled environments and write down exactly how. This is my running case log of CTF writeups — web exploitation, injection, crypto, reversing — plus the background that got me here.",
-  email: "kishorkumar83076@gmail.com", // TODO: your real email
+  email: "kishorkumar83076@gmail.com",
   socials: {
-    github: "https://github.com/atkishork", // TODO
-    linkedin: "https://linkedin.com/in/kishork22", // TODO
-    medium: "https://medium.com/@atkishork", // TODO
-    twitter: "https://x.com/atkishork", // optional — leave blank to hide
+    github: "https://github.com/atkishork",
+    linkedin: "https://linkedin.com/in/kishork22",
+    medium: "https://medium.com/@atkishork",
+    twitter: "https://x.com/atkishork",
   },
-  resumePdf: "/resume.pdf", // TODO: drop a résumé PDF at /public/resume.pdf and set this to "/resume.pdf" to enable the download button
+  resumePdf: "/resume.pdf",
 };
 
 export const about = {
@@ -31,40 +33,59 @@ export const about = {
     "My interest sits on both sides of the fence — defensive fundamentals (CIA triad, network security, secure architecture) and offensive security (CTFs, injection attacks, exploitation). I'd rather understand an attack by reproducing it than by reading about it.",
     "Outside of coursework, I build small security-oriented tools — most recently an AI-assisted penetration testing assistant that chains recon, CVE correlation, and LLM-based vulnerability triage into a single workflow.",
   ],
-  // "Skills and tools I'm expert in" — grouped however you like.
+  // "Skills" — languages and general skills, shown as a simple list.
   skills: [
-    {
-      group: "Offensive Security",
-      items: ["CTF exploitation", "Injection attacks (XXE, SQLi)", "Web application security", "Recon & enumeration"],
-    },
-    {
-      group: "Security Fundamentals",
-      items: ["CIA Triad", "Network security basics", "Threat modeling", "Secure SDLC"],
-    },
-    {
-      group: "Tools & Languages",
-      items: ["Java (OOP)", "Python", "Nmap / NVD APIs", "MITRE ATT&CK mapping"],
-    },
+    "CTF exploitation",
+    "Injection attacks (XXE, SQLi)",
+    "Web application security",
+    "Recon & enumeration",
+    "CIA Triad",
+    "Network security basics",
+    "Threat modeling",
+    "Secure SDLC",
+    "Java (OOP)",
+    "Python",
+    "NVD API integration",
+    "MITRE ATT&CK mapping",
   ],
-  // TODO: fill in real wins — CTF placements, awards, notable finds. The
-  // first one below is filled from your Jailbreak writeup as an example.
+  // "Tools" — icon + 5-star proficiency rating each. `icon` is optional:
+  // drop a logo image in /public/tools/ and point to it (e.g.
+  // "/tools/burpsuite.png"), or leave it "" for an auto-generated monogram
+  // box instead.
+  // TODO: the ratings below are a neutral 3/5 default — adjust each to your
+  // actual proficiency, this wasn't something I could know or guess.
+  tools: [
+    { name: "Nmap", icon: "", rating: 3.5 },
+    { name: "Wireshark", icon: "", rating: 3.5 },
+    { name: "Burp Suite", icon: "", rating: 4 },
+    { name: "Caido", icon: "", rating: 4 },
+    { name: "John the Ripper", icon: "", rating: 3 },
+    { name: "Ghidra", icon: "", rating: 3 },
+    { name: "Gobuster", icon: "", rating: 3 },
+    { name: "Linux", icon: "", rating: 4 },
+  ] as Tool[],
+  // certificateUrl is optional — link to a PDF in /public, an image, or a
+  // verification page (e.g. Credly) — leave "" to hide the link.
   achievements: [
     {
-      title: "Top 25 Finalist of TCS Hackquest Season 10",
+      title: "Top 25 Finalist of TCS HackQuest Season 10",
       description: "TCS HackQuest Season 10, a national-level hackathon by Tata Consultancy Services, and was offered a job profile in CSP Unit.",
       date: "April 2026",
+      certificateUrl: "",
     },
     {
       title: "Winner – Advent of Cyber 2025 (TryHackMe)",
       description: "Awarded a 3-Month TryHackMe Premium Subscription as the reward for Advent of Cyber 2025.",
       date: "Jan 2026",
+      certificateUrl: "",
     },
     {
       title: "1st Runner-Up – Hack With Jolu CTF, JGEC",
-      description: "CTF organised by Cyber Security Club \"Z3r0_L0g0n\" of Jalpaiguri Govt. Engg. College. ",
+      description: "CTF organised by Cyber Security Club \"Z3r0_L0g0n\" of Jalpaiguri Govt. Engg. College.",
       date: "June 2024",
+      certificateUrl: "",
     },
-  ],
+  ] as Achievement[],
   certifications: [
     {
       name: "Cybersecurity 101: Foundations for Absolute Beginners: Udemy",
@@ -77,7 +98,6 @@ export const about = {
       note: "",
     },
   ],
-  // TODO: replace with your real institution, degree, and dates.
   education: [
     {
       institution: "Jalpaiguri Government Engineering College",

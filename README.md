@@ -64,26 +64,39 @@ content/writeups/*.md        ← your writeups (the only place you edit content 
 src/lib/config.ts             ← your name, bio, links, resume, about-page content
 src/lib/writeups.ts           ← reads & parses markdown files
 src/lib/markdown.ts           ← markdown → HTML rendering pipeline (also used client-side for admin preview)
-src/lib/github.ts             ← GitHub Contents API wrapper used by /api/publish
-src/proxy.ts                  ← session-cookie auth gate for /admin and /api/publish
-src/app/page.tsx              ← home page
-src/app/writeups/page.tsx     ← case log (filterable list)
+src/lib/github.ts             ← GitHub Contents API wrapper (publish + delete)
+src/lib/session.ts            ← signed session-cookie helper for admin login
+src/proxy.ts                  ← session-cookie auth gate for /admin and /api/publish, /api/writeups
+src/app/page.tsx              ← home page (recent cases, tag cloud, skills teaser)
+src/app/writeups/page.tsx     ← case log (filterable by category or tag)
 src/app/writeups/[slug]/      ← individual writeup page
 src/app/about/page.tsx        ← dossier / resume page
-src/app/admin/page.tsx        ← private writing portal (paste markdown, upload images, publish)
-src/app/api/publish/route.ts  ← commits the writeup + images to GitHub
-src/components/               ← Nav, Footer, ThemeToggle, CaseCard, filters, badges, AdminEditor
-src/app/globals.css           ← color palette (dark + light), typography, redaction effect
+src/app/admin/page.tsx        ← admin dashboard (stats, list, delete)
+src/app/admin/new/page.tsx    ← writer (paste markdown, upload images, publish)
+src/app/admin/login/page.tsx  ← admin login page
+src/app/api/publish/route.ts  ← commits a writeup + images to GitHub
+src/app/api/writeups/[slug]/route.ts ← deletes a writeup + its images from GitHub
+src/app/api/admin-login/route.ts     ← verifies credentials, sets session cookie
+src/app/api/admin-logout/route.ts    ← clears session cookie
+src/components/               ← Nav, Footer, ThemeToggle, CaseCard, StarRating, ToolCard, AdminDashboard, AdminEditor, etc.
+src/app/globals.css           ← color palette (dark + light), typography, redaction effect, animations
 .env.local.example            ← template for the env vars the admin portal needs
 ```
 
 ## Writing from the admin portal (no code editor needed)
 
-There's a private page at `/admin` — log in, paste or write a writeup, drag
-in screenshots, preview it live, and click Publish. It commits the markdown
-file (and any images) straight to your GitHub repo via the GitHub API;
-since Vercel watches that repo, it auto-deploys within a minute or two.
-Nothing is stored outside git — there's no database.
+There's a private page at `/admin` — a dashboard showing stats and every
+published case, with **Delete** buttons and a **+ New case file** button
+that opens the writer (`/admin/new`). Publishing and deleting both commit
+straight to your GitHub repo via the GitHub API; since Vercel watches that
+repo, publishes show up on the live site within a minute or two.
+
+Deletes remove the file from GitHub immediately and disappear from the
+dashboard's list right away (that part doesn't wait on a redeploy) — but
+the dashboard's initial list, like the live site, reflects the last
+completed deploy, so refreshing the page before the next deploy finishes
+can briefly show a just-deleted entry again. It'll clear up once that
+deploy completes.
 
 **One-time setup:**
 
@@ -117,6 +130,31 @@ If you'd rather just write files locally and `git push` yourself, that
 still works exactly as before — the admin portal is an optional convenience,
 not a requirement.
 
+## Skills, Tools, Achievements, and certificates
+
+The Dossier page's "Skills" section is a flat list (`about.skills` in
+`src/lib/config.ts`) — languages and general skills, no grouping.
+
+"Tools" (`about.tools`) is separate: each entry is `{ name, icon, rating }`,
+rendered as a card with a 1–5 star proficiency rating. `icon` is optional —
+drop a logo image in `public/tools/` and point to it (e.g.
+`"/tools/burpsuite.png"`), or leave it `""` for an automatic monogram box
+instead (same fallback pattern as the profile photo).
+
+Achievements (`about.achievements`) each support an optional
+`certificateUrl` — link to a PDF you've dropped in `public/`, an image, or
+a verification page (Credly, etc.). Leave it `""` to hide the link on that
+achievement.
+
+## Tags on the homepage
+
+The homepage shows every tag used across your writeups as clickable pills
+with post counts (e.g. `#xxe (2)`), computed automatically — nothing to
+configure. Clicking one filters the case log by that tag
+(`/writeups?tag=xxe`); it's mutually exclusive with the category filter
+buttons on that page (picking a category clears the tag filter, and vice
+versa).
+
 ## Dark / light mode
 
 A toggle in the nav (both desktop and mobile) switches themes and remembers
@@ -128,7 +166,7 @@ redaction effect) swaps to a lighter "declassified on paper" palette.
 ## The Dossier (about) page
 
 Ordered as: name → where you work → social links & résumé download → short
-bio → skills & tools → achievements → certifications → education →
+bio → skills → tools → achievements → certifications → education →
 projects → selected case work. All of it is editable in `src/lib/config.ts`
 under the `about` export — nothing in the page component itself needs
 touching to update content.

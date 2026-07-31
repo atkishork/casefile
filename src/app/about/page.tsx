@@ -6,6 +6,7 @@ import { getAllWriteups } from "@/lib/writeups";
 import { padCase } from "@/lib/format";
 import { CATEGORY_LABELS } from "@/lib/types";
 import Avatar from "@/components/Avatar";
+import ToolCard from "@/components/ToolCard";
 
 export const metadata: Metadata = {
   title: `Dossier — ${site.name}`,
@@ -35,28 +36,28 @@ export default function AboutPage() {
         </div>
       </div>
 
-      {/* Social links + résumé download */}
+      {/* Social links + résumé download — shows whichever socials you've
+          filled in under site.socials in src/lib/config.ts; empty ones
+          are skipped automatically. */}
       <div className="mt-6 flex flex-wrap gap-3">
-        {site.socials.linkedin && (
-          <a
-            href={site.socials.linkedin}
-            target="_blank"
-            rel="noreferrer noopener"
-            className="inline-flex items-center gap-1.5 rounded border border-line px-3 py-1.5 font-display text-xs uppercase tracking-[0.1em] text-muted hover:border-stamp-dim hover:text-paper"
-          >
-            <ExternalLink size={13} /> LinkedIn
-          </a>
-        )}
-        {site.socials.github && (
-          <a
-            href={site.socials.github}
-            target="_blank"
-            rel="noreferrer noopener"
-            className="inline-flex items-center gap-1.5 rounded border border-line px-3 py-1.5 font-display text-xs uppercase tracking-[0.1em] text-muted hover:border-stamp-dim hover:text-paper"
-          >
-            <ExternalLink size={13} /> GitHub
-          </a>
-        )}
+        {[
+          { label: "LinkedIn", href: site.socials.linkedin },
+          { label: "GitHub", href: site.socials.github },
+          { label: "Medium", href: site.socials.medium },
+          { label: "Twitter", href: site.socials.twitter },
+        ]
+          .filter((s) => s.href)
+          .map((s) => (
+            <a
+              key={s.label}
+              href={s.href}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="inline-flex items-center gap-1.5 rounded border border-line px-3 py-1.5 font-display text-xs uppercase tracking-[0.1em] text-muted hover:border-stamp-dim hover:text-paper"
+            >
+              <ExternalLink size={13} /> {s.label}
+            </a>
+          ))}
         {site.email && (
           <a
             href={`mailto:${site.email}`}
@@ -98,25 +99,31 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Skills and tools */}
+      {/* Skills */}
       <section className="mt-12">
         <h2 className="font-display text-xs uppercase tracking-[0.15em] text-stamp">
-          02 — Skills &amp; tools
+          02 — Skills
         </h2>
-        <div className="mt-4 grid gap-6 border-t border-line pt-4 sm:grid-cols-3">
-          {about.skills.map((f) => (
-            <div key={f.group}>
-              <h3 className="font-display text-xs uppercase tracking-[0.1em] text-paper">
-                {f.group}
-              </h3>
-              <ul className="mt-2 space-y-1.5">
-                {f.items.map((item) => (
-                  <li key={item} className="text-sm text-muted">
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
+        <div className="mt-4 flex flex-wrap gap-2 border-t border-line pt-4">
+          {about.skills.map((skill) => (
+            <span
+              key={skill}
+              className="rounded-sm border border-line px-2.5 py-1 text-sm text-muted"
+            >
+              {skill}
+            </span>
+          ))}
+        </div>
+      </section>
+
+      {/* Tools */}
+      <section className="mt-12">
+        <h2 className="font-display text-xs uppercase tracking-[0.15em] text-stamp">
+          03 — Tools
+        </h2>
+        <div className="mt-4 grid gap-3 border-t border-line pt-4 sm:grid-cols-2">
+          {about.tools.map((tool) => (
+            <ToolCard key={tool.name} tool={tool} />
           ))}
         </div>
       </section>
@@ -124,7 +131,7 @@ export default function AboutPage() {
       {/* Achievements */}
       <section className="mt-12">
         <h2 className="font-display text-xs uppercase tracking-[0.15em] text-stamp">
-          03 — Achievements
+          04 — Achievements
         </h2>
         <div className="mt-4 divide-y divide-line border-t border-line">
           {about.achievements.map((a) => (
@@ -138,6 +145,16 @@ export default function AboutPage() {
                   )}
                 </div>
                 <p className="mt-1 text-sm text-muted">{a.description}</p>
+                {a.certificateUrl && (
+                  <a
+                    href={a.certificateUrl}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="mt-1.5 inline-flex items-center gap-1 font-display text-[11px] uppercase tracking-[0.08em] text-stamp-bright hover:text-paper"
+                  >
+                    <ExternalLink size={11} /> View certificate
+                  </a>
+                )}
               </div>
             </div>
           ))}
@@ -147,7 +164,7 @@ export default function AboutPage() {
       {/* Certifications */}
       <section className="mt-12">
         <h2 className="font-display text-xs uppercase tracking-[0.15em] text-stamp">
-          04 — Certifications &amp; training
+          05 — Certifications &amp; training
         </h2>
         <div className="mt-4 divide-y divide-line border-t border-line">
           {about.certifications.map((c) => (
@@ -173,7 +190,7 @@ export default function AboutPage() {
       {/* Education */}
       <section className="mt-12">
         <h2 className="font-display text-xs uppercase tracking-[0.15em] text-stamp">
-          05 — Education
+          06 — Education
         </h2>
         <div className="mt-4 divide-y divide-line border-t border-line">
           {about.education.map((e) => (
@@ -195,7 +212,7 @@ export default function AboutPage() {
       {about.projects.length > 0 && (
         <section className="mt-12">
           <h2 className="font-display text-xs uppercase tracking-[0.15em] text-stamp">
-            06 — Projects
+            07 — Projects
           </h2>
           <div className="mt-4 space-y-5 border-t border-line pt-4">
             {about.projects.map((p) => (
@@ -224,7 +241,7 @@ export default function AboutPage() {
       {selected.length > 0 && (
         <section className="mt-12">
           <h2 className="font-display text-xs uppercase tracking-[0.15em] text-stamp">
-            07 — Selected case work
+            08 — Selected case work
           </h2>
           <div className="mt-4 divide-y divide-line border-t border-line">
             {selected.map((w) => (

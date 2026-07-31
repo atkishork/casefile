@@ -38,3 +38,19 @@ export const DIFFICULTY_LABELS: Record<Difficulty, string> = {
   hard: "Hard",
   insane: "Insane",
 };
+
+export interface Tool {
+  name: string;
+  /** Optional path to a logo in /public (e.g. "/tools/burpsuite.png"). Falls back to a monogram box if omitted. */
+  icon?: string;
+  /** Proficiency, shown as a 5-star rating. */
+  rating: 1 | 2 | 3 | 4 | 5;
+}
+
+export interface Achievement {
+  title: string;
+  description: string;
+  date: string;
+  /** Optional link to a certificate — PDF, image, or a verification page (e.g. Credly). */
+  certificateUrl?: string;
+}

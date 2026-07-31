@@ -8,7 +8,12 @@ export const metadata: Metadata = {
   description: "Every CTF writeup, filed by category.",
 };
 
-export default function WriteupsPage() {
+export default async function WriteupsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tag?: string }>;
+}) {
+  const { tag } = await searchParams;
   const writeups = getAllWriteups();
   const categories = getAllCategories();
 
@@ -26,7 +31,7 @@ export default function WriteupsPage() {
       </p>
 
       <div className="mt-10">
-        <WriteupsExplorer writeups={writeups} categories={categories} />
+        <WriteupsExplorer writeups={writeups} categories={categories} initialTag={tag} />
       </div>
     </div>
   );
