@@ -22,6 +22,7 @@ interface PublishBody {
   content: string; // markdown body (no frontmatter)
   slug?: string; // optional override; derived from title if omitted
   images?: PublishImage[];
+  draft?: boolean;
 }
 
 const VALID_CATEGORIES: Category[] = ["web", "pwn", "crypto", "rev", "forensics", "misc", "osint"];
@@ -52,6 +53,7 @@ difficulty: ${body.difficulty}
 tags: ${tagsYaml}
 summary: "${escapeYamlString(body.summary)}"
 status: ${body.status}
+draft: ${body.draft ? "true" : "false"}
 ---
 
 ${body.content}
@@ -99,7 +101,7 @@ export async function POST(req: Request) {
     await putFile(
       `content/writeups/${slug}.md`,
       Buffer.from(markdown, "utf8").toString("base64"),
-      `Add writeup: ${body.title}`
+      `${body.draft ? "Save draft" : "Publish"}: ${body.title}`
     );
 
     // 2. Commit any images alongside it.
@@ -114,7 +116,7 @@ export async function POST(req: Request) {
       );
     }
 
-    return NextResponse.json({ ok: true, slug, url: `/writeups/${slug}` });
+    return NextResponse.json({ ok: true, slug, url: `/writeups/${slug}`, draft: Boolean(body.draft) });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error publishing writeup.";
     return NextResponse.json({ error: message }, { status: 500 });

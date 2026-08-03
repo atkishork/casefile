@@ -14,7 +14,7 @@ export const site = {
   // Path to a photo in /public, e.g. "/profile.jpg" — drop the file in
   // public/ and set this. Leave blank for a monogram placeholder instead.
   avatar: "/profile.jpg",
-  domain: "casefilectf.vercel.app", // TODO: replace with your real domain once deployed
+  domain: "casefile.example.com", // TODO: replace with your real domain once deployed
   summary:
     "I break things in controlled environments and write down exactly how. This is my running case log of CTF writeups — web exploitation, injection, crypto, reversing — plus the background that got me here.",
   email: "kishorkumar83076@gmail.com",
@@ -55,14 +55,14 @@ export const about = {
   // TODO: the ratings below are a neutral 3/5 default — adjust each to your
   // actual proficiency, this wasn't something I could know or guess.
   tools: [
-    { name: "Nmap", icon: "", rating: 3.5 },
-    { name: "Wireshark", icon: "", rating: 3.5 },
-    { name: "Burp Suite", icon: "", rating: 4 },
-    { name: "Caido", icon: "", rating: 4 },
+    { name: "Nmap", icon: "", rating: 3 },
+    { name: "Wireshark", icon: "", rating: 3 },
+    { name: "Burp Suite", icon: "", rating: 3 },
+    { name: "Caido", icon: "", rating: 3 },
     { name: "John the Ripper", icon: "", rating: 3 },
     { name: "Ghidra", icon: "", rating: 3 },
     { name: "Gobuster", icon: "", rating: 3 },
-    { name: "Linux", icon: "", rating: 4 },
+    { name: "Linux", icon: "", rating: 3 },
   ] as Tool[],
   // certificateUrl is optional — link to a PDF in /public, an image, or a
   // verification page (e.g. Credly) — leave "" to hide the link.

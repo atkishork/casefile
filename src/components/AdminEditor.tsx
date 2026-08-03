@@ -12,7 +12,23 @@ interface UploadedImage {
   previewUrl: string;
 }
 
-type PublishResult = { ok: true; slug: string; url: string } | { ok: false; error: string };
+type PublishResult =
+  | { ok: true; slug: string; url: string; draft: boolean }
+  | { ok: false; error: string };
+
+export interface AdminEditorInitial {
+  slug: string;
+  title: string;
+  date: string;
+  ctf: string;
+  category: Category;
+  difficulty: Difficulty;
+  tags: string[];
+  summary: string;
+  status: Status;
+  draft: boolean;
+  content: string;
+}
 
 const todayISO = () => new Date().toISOString().slice(0, 10);
 
@@ -20,17 +36,19 @@ const inputClass =
   "w-full rounded border border-line bg-panel px-3 py-2 text-sm text-text placeholder:text-muted-2 focus:border-stamp-dim focus:outline-none";
 const labelClass = "font-display text-[11px] uppercase tracking-[0.1em] text-muted";
 
-export default function AdminEditor() {
-  const [title, setTitle] = useState("");
-  const [date, setDate] = useState(todayISO());
-  const [ctf, setCtf] = useState("");
-  const [category, setCategory] = useState<Category>("web");
-  const [difficulty, setDifficulty] = useState<Difficulty>("medium");
-  const [tags, setTags] = useState("");
-  const [summary, setSummary] = useState("");
-  const [status, setStatus] = useState<Status>("solved");
-  const [slugOverride, setSlugOverride] = useState("");
-  const [content, setContent] = useState("");
+export default function AdminEditor({ initial }: { initial?: AdminEditorInitial }) {
+  const isEditing = Boolean(initial);
+  const [title, setTitle] = useState(initial?.title ?? "");
+  const [date, setDate] = useState(initial?.date ?? todayISO());
+  const [ctf, setCtf] = useState(initial?.ctf ?? "");
+  const [category, setCategory] = useState<Category>(initial?.category ?? "web");
+  const [difficulty, setDifficulty] = useState<Difficulty>(initial?.difficulty ?? "medium");
+  const [tags, setTags] = useState(initial?.tags.join(", ") ?? "");
+  const [summary, setSummary] = useState(initial?.summary ?? "");
+  const [status, setStatus] = useState<Status>(initial?.status ?? "solved");
+  const [draft, setDraft] = useState(initial?.draft ?? false);
+  const [slugOverride, setSlugOverride] = useState(initial?.slug ?? "");
+  const [content, setContent] = useState(initial?.content ?? "");
   const [images, setImages] = useState<UploadedImage[]>([]);
   const [previewHtml, setPreviewHtml] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -52,7 +70,7 @@ export default function AdminEditor() {
   useEffect(() => {
     const handle = setTimeout(() => {
       markdownToHtml(content.trim() ? content : "*Nothing written yet — start typing on the left.*").then(
-        setPreviewHtml
+        (rendered) => setPreviewHtml(rendered.html)
       );
     }, 350);
     return () => clearTimeout(handle);
@@ -112,10 +130,15 @@ export default function AdminEditor() {
           content,
           slug: slug || undefined,
           images: images.map(({ filename, base64 }) => ({ filename, base64 })),
+          draft,
         }),
       });
       const data = await res.json();
-      setResult(res.ok ? { ok: true, slug: data.slug, url: data.url } : { ok: false, error: data.error });
+      setResult(
+        res.ok
+          ? { ok: true, slug: data.slug, url: data.url, draft: Boolean(data.draft) }
+          : { ok: false, error: data.error }
+      );
     } catch (err) {
       setResult({ ok: false, error: err instanceof Error ? err.message : "Network error." });
     } finally {
@@ -139,24 +162,34 @@ export default function AdminEditor() {
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Login Bypass via SQL Injection"
           />
-          <p className="mt-1 text-xs text-muted-2">
-            Slug: <code className="font-code">{slug || "—"}</code>
-            {" · "}
-            <button
-              type="button"
-              className="underline decoration-dotted underline-offset-2 hover:text-stamp-bright"
-              onClick={() => setSlugOverride(slugOverride ? "" : slug)}
-            >
-              {slugOverride ? "using custom slug" : "override slug"}
-            </button>
-          </p>
-          {slugOverride !== "" && (
-            <input
-              className={`${inputClass} mt-1.5`}
-              value={slugOverride}
-              onChange={(e) => setSlugOverride(e.target.value)}
-              placeholder="custom-slug"
-            />
+          {isEditing ? (
+            <p className="mt-1 text-xs text-muted-2">
+              Slug: <code className="font-code">{slug}</code> — locked while
+              editing (changing it would create a new file instead of
+              updating this one).
+            </p>
+          ) : (
+            <>
+              <p className="mt-1 text-xs text-muted-2">
+                Slug: <code className="font-code">{slug || "—"}</code>
+                {" · "}
+                <button
+                  type="button"
+                  className="underline decoration-dotted underline-offset-2 hover:text-stamp-bright"
+                  onClick={() => setSlugOverride(slugOverride ? "" : slug)}
+                >
+                  {slugOverride ? "using custom slug" : "override slug"}
+                </button>
+              </p>
+              {slugOverride !== "" && (
+                <input
+                  className={`${inputClass} mt-1.5`}
+                  value={slugOverride}
+                  onChange={(e) => setSlugOverride(e.target.value)}
+                  placeholder="custom-slug"
+                />
+              )}
+            </>
           )}
         </div>
 
@@ -232,6 +265,24 @@ export default function AdminEditor() {
             placeholder="sqli, auth-bypass, web"
           />
         </div>
+
+        <label className="flex cursor-pointer items-start gap-2.5 rounded border border-line bg-panel/40 p-3">
+          <input
+            type="checkbox"
+            checked={draft}
+            onChange={(e) => setDraft(e.target.checked)}
+            className="mt-0.5 h-4 w-4 accent-stamp"
+          />
+          <span className="text-sm text-muted">
+            <span className="font-display text-xs uppercase tracking-[0.08em] text-paper">
+              Save as draft
+            </span>
+            <br />
+            Commits the file, but it won&apos;t appear on the home page, case
+            log, tag cloud, or sitemap — not even by direct URL — until you
+            come back and uncheck this.
+          </span>
+        </label>
 
         <div>
           <label className={labelClass}>Summary * (shown on the case-log card)</label>
@@ -320,8 +371,12 @@ export default function AdminEditor() {
         >
           {submitting ? (
             <>
-              <Loader2 size={14} className="animate-spin" /> Publishing…
+              <Loader2 size={14} className="animate-spin" /> {draft ? "Saving draft…" : isEditing ? "Saving…" : "Publishing…"}
             </>
+          ) : draft ? (
+            "Save draft"
+          ) : isEditing ? (
+            "Save changes"
           ) : (
             "Publish case file"
           )}
@@ -337,8 +392,19 @@ export default function AdminEditor() {
               <>
                 <CheckCircle2 size={16} className="mt-0.5 shrink-0" />
                 <span>
-                  Committed. Once your host redeploys, it&apos;ll be live at{" "}
-                  <code className="font-code">{result.url}</code>.
+                  {result.draft ? (
+                    <>
+                      Saved as a draft — committed to your repo, but hidden
+                      from the live site. Come back to{" "}
+                      <code className="font-code">/admin</code> anytime to
+                      finish and publish it.
+                    </>
+                  ) : (
+                    <>
+                      Committed. Once your host redeploys, it&apos;ll be live
+                      at <code className="font-code">{result.url}</code>.
+                    </>
+                  )}
                 </span>
               </>
             ) : (

@@ -1,23 +1,14 @@
 import type { MetadataRoute } from "next";
 import { site } from "@/lib/config";
 import { getAllWriteups } from "@/lib/writeups";
+import { siteUrl } from "@/lib/format";
 
 // Served automatically at /sitemap.xml — this file coexists fine with
 // src/app/sitemap/page.tsx (the human-readable /sitemap page); they're
 // different route names ("sitemap.ts" vs the "sitemap" folder).
 
-function baseUrl(): string {
-  const domain = site.domain?.trim();
-  if (!domain || domain.includes("example.com")) {
-    // TODO: set a real site.domain in src/lib/config.ts once you have one —
-    // until then this falls back to a relative-safe placeholder.
-    return "https://your-domain-here.com";
-  }
-  return domain.startsWith("http") ? domain : `https://${domain}`;
-}
-
 export default function sitemap(): MetadataRoute.Sitemap {
-  const base = baseUrl();
+  const base = siteUrl(site.domain);
   const writeups = getAllWriteups();
 
   const staticRoutes: MetadataRoute.Sitemap = [

@@ -13,7 +13,9 @@ export default function AdminPage() {
   // next redeploy" model as publishing. Deletes remove the underlying file
   // from GitHub immediately; the dashboard's own list updates instantly via
   // local state (see AdminDashboard), independent of the redeploy cycle.
-  const writeups = getAllWriteups();
+  // Includes drafts (unlike every public page) so you can see and manage
+  // them here — same "reflects the last deploy" snapshot model as before.
+  const writeups = getAllWriteups({ includeDrafts: true });
 
   return (
     <div className="mx-auto max-w-4xl px-5 py-10 sm:px-8 sm:py-14">

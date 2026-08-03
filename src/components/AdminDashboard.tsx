@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Plus, Trash2, Loader2, AlertTriangle } from "lucide-react";
+import { Plus, Trash2, Loader2, AlertTriangle, Pencil } from "lucide-react";
 import type { Writeup } from "@/lib/types";
 import { CATEGORY_LABELS } from "@/lib/types";
 import { padCase, formatDate } from "@/lib/format";
@@ -14,12 +14,14 @@ export default function AdminDashboard({ initialWriteups }: { initialWriteups: W
     const byCategory: Record<string, number> = {};
     let solved = 0;
     let wip = 0;
+    let drafts = 0;
     const tags = new Set<string>();
 
     for (const w of writeups) {
       byCategory[w.category] = (byCategory[w.category] ?? 0) + 1;
       if (w.status === "solved") solved++;
       else wip++;
+      if (w.draft) drafts++;
       w.tags.forEach((t) => tags.add(t));
     }
 
@@ -27,6 +29,7 @@ export default function AdminDashboard({ initialWriteups }: { initialWriteups: W
       total: writeups.length,
       solved,
       wip,
+      drafts,
       categories: Object.entries(byCategory).sort((a, b) => b[1] - a[1]),
       tagCount: tags.size,
     };
@@ -39,10 +42,11 @@ export default function AdminDashboard({ initialWriteups }: { initialWriteups: W
   return (
     <div className="mt-8">
       {/* Stats */}
-      <dl className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <dl className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
         <StatCard label="Total cases" value={stats.total} />
         <StatCard label="Solved" value={stats.solved} />
         <StatCard label="In progress" value={stats.wip} />
+        <StatCard label="Drafts" value={stats.drafts} />
         <StatCard label="Tags used" value={stats.tagCount} />
       </dl>
 
@@ -139,9 +143,14 @@ function WriteupRow({
   return (
     <div className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0">
-        <div className="flex items-baseline gap-2">
+        <div className="flex flex-wrap items-baseline gap-2">
           <span className="font-display text-xs text-stamp">{padCase(writeup.caseNumber)}</span>
           <span className="truncate font-display text-sm text-paper">{writeup.title}</span>
+          {writeup.draft && (
+            <span className="rounded-sm border border-stamp px-1.5 py-0.5 font-display text-[9px] uppercase tracking-wide text-stamp-bright">
+              Draft
+            </span>
+          )}
         </div>
         <p className="mt-0.5 text-xs uppercase tracking-wide text-muted-2">
           {CATEGORY_LABELS[writeup.category]} · {writeup.ctf} · {formatDate(writeup.date)}
@@ -154,6 +163,12 @@ function WriteupRow({
       </div>
 
       <div className="flex shrink-0 items-center gap-2">
+        <Link
+          href={`/admin/edit/${writeup.slug}`}
+          className="inline-flex items-center gap-1.5 rounded border border-line px-2.5 py-1.5 font-display text-[10px] uppercase tracking-wide text-muted transition-colors hover:border-stamp-dim hover:text-paper"
+        >
+          <Pencil size={12} /> {writeup.draft ? "Resume" : "Edit"}
+        </Link>
         {confirming ? (
           <>
             <span className="text-xs text-muted">Delete permanently?</span>

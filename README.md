@@ -62,23 +62,26 @@ download button appears on the Dossier page automatically.
 ```
 content/writeups/*.md        ← your writeups (the only place you edit content day-to-day)
 src/lib/config.ts             ← your name, bio, links, resume, about-page content
-src/lib/writeups.ts           ← reads & parses markdown files
-src/lib/markdown.ts           ← markdown → HTML rendering pipeline (also used client-side for admin preview)
-src/lib/github.ts             ← GitHub Contents API wrapper (publish + delete)
+src/lib/writeups.ts           ← reads & parses markdown files, handles draft filtering
+src/lib/markdown.ts           ← markdown → HTML rendering pipeline + table-of-contents extraction
+src/lib/github.ts             ← GitHub Contents API wrapper (publish, edit, delete)
 src/lib/session.ts            ← signed session-cookie helper for admin login
-src/proxy.ts                  ← session-cookie auth gate for /admin and /api/publish, /api/writeups
+src/lib/og-font.ts            ← font loader shared by both opengraph-image files
+src/proxy.ts                  ← session-cookie auth gate for /admin and its APIs
 src/app/page.tsx              ← home page (recent cases, tag cloud, skills teaser)
+src/app/opengraph-image.tsx   ← default social preview image
 src/app/writeups/page.tsx     ← case log (filterable by category or tag)
-src/app/writeups/[slug]/      ← individual writeup page
+src/app/writeups/[slug]/      ← individual writeup page, incl. its own opengraph-image.tsx
 src/app/about/page.tsx        ← dossier / resume page
 src/app/admin/page.tsx        ← admin dashboard (stats, list, delete)
-src/app/admin/new/page.tsx    ← writer (paste markdown, upload images, publish)
+src/app/admin/new/page.tsx    ← writer (paste markdown, upload images, publish or save draft)
+src/app/admin/edit/[slug]/    ← reopen an existing writeup (or resume a draft) for editing
 src/app/admin/login/page.tsx  ← admin login page
-src/app/api/publish/route.ts  ← commits a writeup + images to GitHub
+src/app/api/publish/route.ts  ← commits a writeup + images to GitHub (also handles edits)
 src/app/api/writeups/[slug]/route.ts ← deletes a writeup + its images from GitHub
 src/app/api/admin-login/route.ts     ← verifies credentials, sets session cookie
 src/app/api/admin-logout/route.ts    ← clears session cookie
-src/components/               ← Nav, Footer, ThemeToggle, CaseCard, StarRating, ToolCard, AdminDashboard, AdminEditor, etc.
+src/components/               ← Nav, Footer, ThemeToggle, CaseCard, TableOfContents, StarRating, ToolCard, AdminDashboard, AdminEditor, etc.
 src/app/globals.css           ← color palette (dark + light), typography, redaction effect, animations
 .env.local.example            ← template for the env vars the admin portal needs
 ```
@@ -129,6 +132,41 @@ is the session check, not obscurity.
 If you'd rather just write files locally and `git push` yourself, that
 still works exactly as before — the admin portal is an optional convenience,
 not a requirement.
+
+## Table of contents
+
+Writeup pages with 2+ `##`/`###` headings automatically get a table of
+contents — a sticky sidebar on desktop, a collapsible "On this page" section
+on mobile (no JS needed for that one, it's a native `<details>` element).
+Nothing to configure; it's generated from your actual headings every time.
+
+## Drafts, and editing/resuming a writeup
+
+Checking "Save as draft" in the writer commits the file to GitHub but keeps
+it off every public page (home, case log, tag cloud, sitemap) and blocks
+direct URL access too — it's genuinely unpublished, not just unlisted.
+
+To finish a draft later (or fix a typo in something already published), use
+the **Edit** / **Resume** link next to any writeup in the `/admin`
+dashboard — it reopens the writer with everything pre-filled, including the
+existing markdown content. Saving writes back to the same file (the slug is
+locked while editing, so you don't accidentally fork it into a second file)
+rather than creating a new commit's worth of duplicate content.
+
+## Social preview images
+
+Every writeup gets an automatically-generated Open Graph image — when you
+share a link on LinkedIn/Twitter/Discord/etc., it shows a branded card with
+the title, case number, category, and CTF name instead of nothing. The home
+page and other top-level pages get a simpler site-wide version. Nothing to
+configure — these regenerate from `src/lib/config.ts` and each writeup's
+frontmatter automatically.
+
+**One thing worth setting once you have a real domain:** `site.domain` in
+`src/lib/config.ts` needs to be your actual deployed URL for these images
+(and the sitemap) to resolve correctly when shared — while it's still the
+placeholder `casefile.example.com`, both fall back to a clearly-fake URL
+rather than silently pointing at the wrong domain.
 
 ## Skills, Tools, Achievements, and certificates
 

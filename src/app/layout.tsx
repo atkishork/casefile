@@ -4,6 +4,7 @@ import "./globals.css";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import { site } from "@/lib/config";
+import { siteUrl } from "@/lib/format";
 
 const plexMono = IBM_Plex_Mono({
   variable: "--font-plex-mono",
@@ -24,6 +25,10 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
+  // Needed so OG/Twitter image URLs (from opengraph-image.tsx files)
+  // resolve to an absolute URL instead of defaulting to localhost. Set
+  // site.domain in src/lib/config.ts once you have a real one.
+  metadataBase: new URL(siteUrl(site.domain)),
   title: `${site.brand} — ${site.name}`,
   description: site.summary,
   openGraph: {

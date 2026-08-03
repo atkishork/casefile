@@ -13,6 +13,8 @@ export interface WriteupFrontmatter {
   tags: string[];
   summary: string;
   status: Status;
+  /** Unpublished — hidden from all public pages until set to false. Optional; absent/undefined is treated as false. */
+  draft?: boolean;
 }
 
 export interface Writeup extends WriteupFrontmatter {
@@ -20,6 +22,8 @@ export interface Writeup extends WriteupFrontmatter {
   caseNumber: number;
   readingMinutes: number;
   content: string; // raw markdown
+  /** Normalized from the optional frontmatter field — always a real boolean here. */
+  draft: boolean;
 }
 
 export const CATEGORY_LABELS: Record<Category, string> = {

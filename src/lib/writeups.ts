@@ -18,8 +18,15 @@ function readSlugs(): string[] {
  * Reads every markdown file in content/writeups, parses frontmatter,
  * assigns sequential case numbers in chronological order (oldest = CASE-001),
  * and returns them sorted newest-first for display.
+ *
+ * Drafts (frontmatter `draft: true`) are excluded by default — every public
+ * page (home, case log, tag cloud, sitemap, generateStaticParams) uses that
+ * default, so a draft has no live URL until it's published. Pass
+ * `includeDrafts: true` for admin-only views that need to see everything.
+ * Case numbers are computed only over the returned (visible) set, so drafts
+ * never create gaps in the public numbering.
  */
-export function getAllWriteups(): Writeup[] {
+export function getAllWriteups(options?: { includeDrafts?: boolean }): Writeup[] {
   const slugs = readSlugs();
 
   const parsed = slugs.map((slug) => {
@@ -32,12 +39,15 @@ export function getAllWriteups(): Writeup[] {
       ...fm,
       slug,
       content,
+      draft: Boolean(fm.draft),
       readingMinutes: Math.max(1, Math.ceil(readingTime(content).minutes)),
     };
   });
 
+  const visible = options?.includeDrafts ? parsed : parsed.filter((w) => !w.draft);
+
   // Chronological (oldest first) to assign stable, ever-increasing case numbers.
-  const chronological = [...parsed].sort(
+  const chronological = [...visible].sort(
     (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
   );
 
@@ -52,8 +62,11 @@ export function getAllWriteups(): Writeup[] {
   );
 }
 
-export function getWriteupBySlug(slug: string): Writeup | undefined {
-  return getAllWriteups().find((w) => w.slug === slug);
+export function getWriteupBySlug(
+  slug: string,
+  options?: { includeDrafts?: boolean }
+): Writeup | undefined {
+  return getAllWriteups(options).find((w) => w.slug === slug);
 }
 
 export function getAllCategories(): Category[] {
