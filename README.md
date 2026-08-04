@@ -61,27 +61,34 @@ download button appears on the Dossier page automatically.
 
 ```
 content/writeups/*.md        ← your writeups (the only place you edit content day-to-day)
+content/notes/*.md            ← your field notes / blog posts
+assets/ibm-plex-mono-600.woff ← bundled font used by the OG image generator (see Social preview images)
 src/lib/config.ts             ← your name, bio, links, resume, about-page content
-src/lib/writeups.ts           ← reads & parses markdown files, handles draft filtering
-src/lib/markdown.ts           ← markdown → HTML rendering pipeline + table-of-contents extraction
+src/lib/writeups.ts           ← reads & parses writeup markdown files, handles draft filtering
+src/lib/notes.ts              ← same, for field notes (separate NOTE-### numbering)
+src/lib/markdown.ts           ← markdown → HTML rendering pipeline + table-of-contents extraction (shared by both)
 src/lib/github.ts             ← GitHub Contents API wrapper (publish, edit, delete)
 src/lib/session.ts            ← signed session-cookie helper for admin login
-src/lib/og-font.ts            ← font loader shared by both opengraph-image files
+src/lib/og-font.ts            ← reads the bundled font for both opengraph-image files
 src/proxy.ts                  ← session-cookie auth gate for /admin and its APIs
 src/app/page.tsx              ← home page (recent cases, tag cloud, skills teaser)
 src/app/opengraph-image.tsx   ← default social preview image
 src/app/writeups/page.tsx     ← case log (filterable by category or tag)
 src/app/writeups/[slug]/      ← individual writeup page, incl. its own opengraph-image.tsx
+src/app/notes/page.tsx        ← field notes list (filterable by tag)
+src/app/notes/[slug]/         ← individual note page, incl. its own opengraph-image.tsx
 src/app/about/page.tsx        ← dossier / resume page
-src/app/admin/page.tsx        ← admin dashboard (stats, list, delete)
-src/app/admin/new/page.tsx    ← writer (paste markdown, upload images, publish or save draft)
+src/app/admin/page.tsx        ← admin dashboard for writeups (stats, list, delete)
+src/app/admin/new/page.tsx    ← writeup writer
 src/app/admin/edit/[slug]/    ← reopen an existing writeup (or resume a draft) for editing
+src/app/admin/notes/          ← same three (dashboard, new, edit) for field notes
 src/app/admin/login/page.tsx  ← admin login page
-src/app/api/publish/route.ts  ← commits a writeup + images to GitHub (also handles edits)
-src/app/api/writeups/[slug]/route.ts ← deletes a writeup + its images from GitHub
+src/app/api/publish/route.ts  ← commits a writeup OR note (+ images) to GitHub, incl. edits
+src/app/api/writeups/[slug]/route.ts ← deletes a writeup + its images
+src/app/api/notes/[slug]/route.ts    ← deletes a note + its images
 src/app/api/admin-login/route.ts     ← verifies credentials, sets session cookie
 src/app/api/admin-logout/route.ts    ← clears session cookie
-src/components/               ← Nav, Footer, ThemeToggle, CaseCard, TableOfContents, StarRating, ToolCard, AdminDashboard, AdminEditor, etc.
+src/components/               ← Nav, Footer, ThemeToggle, CaseCard, NoteCard, TableOfContents, StarRating, ToolCard, AdminDashboard, AdminEditor, etc.
 src/app/globals.css           ← color palette (dark + light), typography, redaction effect, animations
 .env.local.example            ← template for the env vars the admin portal needs
 ```
@@ -133,6 +140,36 @@ If you'd rather just write files locally and `git push` yourself, that
 still works exactly as before — the admin portal is an optional convenience,
 not a requirement.
 
+## Field Notes (blog / written notes)
+
+A second, separate content type alongside writeups — for blog posts, notes,
+opinions, anything that isn't a CTF case file. Lives at `/notes` in the nav
+("Field Notes"), with its own admin dashboard at `/admin/notes`.
+
+It shares the same underlying engine as writeups (markdown rendering, code
+syntax highlighting, table of contents, images, drafts, social preview
+images) but with a deliberately simpler frontmatter — no category,
+difficulty, or CTF fields, just:
+
+```yaml
+---
+title: "Post title"
+date: "2026-08-01"
+tags: ["career", "opinion"]
+summary: "One or two sentences shown on the notes list."
+draft: false
+---
+```
+
+Add a note the same way as a writeup: drop a `.md` file in
+`content/notes/`, or use the writer at `/admin/notes/new`. Images go in
+`public/notes/your-slug/`. Numbering is separate from writeups too —
+`NOTE-001`, `NOTE-002`, etc. — so publishing a note never shifts a case
+file's number or vice versa.
+
+The admin dashboard has a small **Case Files / Field Notes** toggle at the
+top so you can jump between managing the two.
+
 ## Table of contents
 
 Writeup pages with 2+ `##`/`###` headings automatically get a table of
@@ -155,18 +192,27 @@ rather than creating a new commit's worth of duplicate content.
 
 ## Social preview images
 
-Every writeup gets an automatically-generated Open Graph image — when you
-share a link on LinkedIn/Twitter/Discord/etc., it shows a branded card with
-the title, case number, category, and CTF name instead of nothing. The home
-page and other top-level pages get a simpler site-wide version. Nothing to
-configure — these regenerate from `src/lib/config.ts` and each writeup's
-frontmatter automatically.
+Every writeup and every field note gets an automatically-generated Open
+Graph image — when you share a link on LinkedIn/Twitter/Discord/etc., it
+shows a branded card with the title and a few key details instead of
+nothing. The home page and other top-level pages get a simpler site-wide
+version. Nothing to configure — these regenerate automatically from
+`src/lib/config.ts` and each post's frontmatter.
 
 **One thing worth setting once you have a real domain:** `site.domain` in
 `src/lib/config.ts` needs to be your actual deployed URL for these images
 (and the sitemap) to resolve correctly when shared — while it's still the
 placeholder `casefile.example.com`, both fall back to a clearly-fake URL
 rather than silently pointing at the wrong domain.
+
+**Font, technical note:** these images use a font file bundled directly in
+the repo (`assets/ibm-plex-mono-600.woff`), read via `src/lib/og-font.ts`,
+rather than being fetched from Google Fonts at request time. An earlier
+version fetched from Google Fonts, which worked locally but broke the
+Vercel build (their CSS response didn't match the format that approach
+assumed). If you ever want to swap this font, replace that `.woff` file —
+`next/og`'s renderer (Satori) supports `.ttf`, `.otf`, and `.woff`, but
+**not** `.woff2`.
 
 ## Skills, Tools, Achievements, and certificates
 

@@ -9,6 +9,7 @@ import ThemeToggle from "./ThemeToggle";
 
 const links = [
   { href: "/writeups", label: "Case Log" },
+  { href: "/notes", label: "Field Notes" },
   { href: "/about", label: "Dossier" },
 ];
 

@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { site } from "@/lib/config";
 import { getAllWriteups } from "@/lib/writeups";
+import { getAllNotes } from "@/lib/notes";
 import { CATEGORY_LABELS } from "@/lib/types";
-import { padCase } from "@/lib/format";
+import { padCase, padNote } from "@/lib/format";
 
 export const metadata: Metadata = {
   title: `Sitemap — ${site.brand}`,
@@ -12,10 +13,12 @@ export const metadata: Metadata = {
 
 export default function SitemapPage() {
   const writeups = getAllWriteups();
+  const notes = getAllNotes();
 
   const pages = [
     { href: "/", label: "Home" },
     { href: "/writeups", label: "Case Log" },
+    { href: "/notes", label: "Field Notes" },
     { href: "/about", label: "Dossier" },
     { href: "/privacy", label: "Privacy Policy" },
     { href: "/disclaimer", label: "Disclaimer" },
@@ -67,6 +70,29 @@ export default function SitemapPage() {
                   <span className="truncate">{w.title}</span>
                   <span className="shrink-0 font-code text-xs text-muted-2">
                     {padCase(w.caseNumber)} · {CATEGORY_LABELS[w.category]}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {notes.length > 0 && (
+        <section className="mt-10">
+          <h2 className="font-display text-xs uppercase tracking-[0.15em] text-stamp">
+            Field notes ({notes.length})
+          </h2>
+          <ul className="mt-3 divide-y divide-line border-t border-line">
+            {notes.map((n) => (
+              <li key={n.slug}>
+                <Link
+                  href={`/notes/${n.slug}`}
+                  className="flex items-baseline justify-between gap-3 py-3 text-sm text-muted transition-colors hover:text-stamp-bright"
+                >
+                  <span className="truncate">{n.title}</span>
+                  <span className="shrink-0 font-code text-xs text-muted-2">
+                    {padNote(n.noteNumber)}
                   </span>
                 </Link>
               </li>

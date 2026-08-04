@@ -1,36 +1,24 @@
-// next/og's ImageResponse renders via Satori, which can't reference a
-// system/Google Font by name the way normal CSS can — it needs the actual
-// font file bytes. This fetches just the glyphs actually used (via the
-// `text` param) from Google Fonts at request/build time.
+import { readFile } from "node:fs/promises";
+import path from "node:path";
+
+// Bundled directly in the repo (assets/ibm-plex-mono-600.woff) rather than
+// fetched from Google Fonts at request time — a previous version of this
+// file fetched Google's CSS response and parsed it for a font URL, which
+// worked in local dev but broke on Vercel's build servers (their CSS
+// response didn't match the assumed format, failing the whole build).
+// Reading a file that's actually committed to the repo can't have that
+// class of failure. Font format: Satori (which powers next/og's
+// ImageResponse) supports ttf/otf/woff — NOT woff2, hence .woff here.
 //
-// If this ever needs to run somewhere without outbound internet access,
-// swap this for a font file bundled in the repo instead.
+// Loaded once and cached at module scope per Next.js's own guidance, so
+// warm serverless invocations reuse the same bytes instead of re-reading
+// the file every request.
 
-let cachedFont: ArrayBuffer | null = null;
-let cachedText = "";
+let fontPromise: Promise<Buffer> | null = null;
 
-export async function loadPlexMonoFont(text: string): Promise<ArrayBuffer> {
-  // Cache the widest character set requested so far, per server instance —
-  // avoids re-fetching on every image render.
-  if (cachedFont && cachedText.includes(text)) return cachedFont;
-
-  const cssUrl = `https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@600&text=${encodeURIComponent(text)}`;
-  const cssRes = await fetch(cssUrl, {
-    headers: {
-      // Google serves modern woff2 by default for most UAs, but Satori
-      // needs ttf/otf — an old UA string gets us a truetype src instead.
-      "User-Agent":
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/40.0.2214.115 Safari/537.36",
-    },
-  });
-  const css = await cssRes.text();
-  const match = css.match(/src: url\(([^)]+)\) format\('(opentype|truetype)'\)/);
-  if (!match) throw new Error("Could not locate a usable font URL in Google Fonts CSS response.");
-
-  const fontRes = await fetch(match[1]);
-  const buffer = await fontRes.arrayBuffer();
-
-  cachedFont = buffer;
-  cachedText = text;
-  return buffer;
+export function loadPlexMonoFont(): Promise<Buffer> {
+  if (!fontPromise) {
+    fontPromise = readFile(path.join(process.cwd(), "assets", "ibm-plex-mono-600.woff"));
+  }
+  return fontPromise;
 }

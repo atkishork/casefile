@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { site } from "@/lib/config";
 import { getAllWriteups } from "@/lib/writeups";
+import { getAllNotes } from "@/lib/notes";
 import { siteUrl } from "@/lib/format";
 
 // Served automatically at /sitemap.xml — this file coexists fine with
@@ -10,10 +11,12 @@ import { siteUrl } from "@/lib/format";
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = siteUrl(site.domain);
   const writeups = getAllWriteups();
+  const notes = getAllNotes();
 
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: `${base}/`, changeFrequency: "weekly", priority: 1 },
     { url: `${base}/writeups`, changeFrequency: "weekly", priority: 0.9 },
+    { url: `${base}/notes`, changeFrequency: "weekly", priority: 0.8 },
     { url: `${base}/about`, changeFrequency: "monthly", priority: 0.7 },
     { url: `${base}/sitemap`, changeFrequency: "monthly", priority: 0.3 },
     { url: `${base}/privacy`, changeFrequency: "yearly", priority: 0.2 },
@@ -27,5 +30,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.6,
   }));
 
-  return [...staticRoutes, ...writeupRoutes];
+  const noteRoutes: MetadataRoute.Sitemap = notes.map((n) => ({
+    url: `${base}/notes/${n.slug}`,
+    lastModified: n.date,
+    changeFrequency: "monthly",
+    priority: 0.5,
+  }));
+
+  return [...staticRoutes, ...writeupRoutes, ...noteRoutes];
 }

@@ -42,6 +42,7 @@ export default async function AdminEditPage({
         <LogoutButton />
       </div>
       <AdminEditor
+        contentType="writeup"
         initial={{
           slug: writeup.slug,
           title: writeup.title,

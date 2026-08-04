@@ -6,6 +6,8 @@ import type { Category, Difficulty, Status } from "@/lib/types";
 import { CATEGORY_LABELS, DIFFICULTY_LABELS } from "@/lib/types";
 import { UploadCloud, X, Wand2, Loader2, CheckCircle2, AlertTriangle } from "lucide-react";
 
+export type ContentType = "writeup" | "note";
+
 interface UploadedImage {
   filename: string;
   base64: string;
@@ -20,14 +22,15 @@ export interface AdminEditorInitial {
   slug: string;
   title: string;
   date: string;
-  ctf: string;
-  category: Category;
-  difficulty: Difficulty;
   tags: string[];
   summary: string;
-  status: Status;
   draft: boolean;
   content: string;
+  // Writeup-only fields — undefined when editing a note.
+  ctf?: string;
+  category?: Category;
+  difficulty?: Difficulty;
+  status?: Status;
 }
 
 const todayISO = () => new Date().toISOString().slice(0, 10);
@@ -36,8 +39,16 @@ const inputClass =
   "w-full rounded border border-line bg-panel px-3 py-2 text-sm text-text placeholder:text-muted-2 focus:border-stamp-dim focus:outline-none";
 const labelClass = "font-display text-[11px] uppercase tracking-[0.1em] text-muted";
 
-export default function AdminEditor({ initial }: { initial?: AdminEditorInitial }) {
+export default function AdminEditor({
+  contentType,
+  initial,
+}: {
+  contentType: ContentType;
+  initial?: AdminEditorInitial;
+}) {
+  const isWriteup = contentType === "writeup";
   const isEditing = Boolean(initial);
+
   const [title, setTitle] = useState(initial?.title ?? "");
   const [date, setDate] = useState(initial?.date ?? todayISO());
   const [ctf, setCtf] = useState(initial?.ctf ?? "");
@@ -66,6 +77,8 @@ export default function AdminEditor({ initial }: { initial?: AdminEditorInitial 
       .slice(0, 80);
   }, [title, slugOverride]);
 
+  const imageBaseDir = isWriteup ? "writeups" : "notes";
+
   // Debounced live preview — reuses the exact same renderer the real site uses.
   useEffect(() => {
     const handle = setTimeout(() => {
@@ -90,7 +103,7 @@ export default function AdminEditor({ initial }: { initial?: AdminEditorInitial 
   }
 
   function insertImageMarkdown(img: UploadedImage) {
-    const snippet = `![${img.filename}](/writeups/${slug || "your-slug"}/${img.filename})`;
+    const snippet = `![${img.filename}](/${imageBaseDir}/${slug || "your-slug"}/${img.filename})`;
     const el = textareaRef.current;
     if (!el) {
       setContent((c) => `${c}\n${snippet}\n`);
@@ -119,18 +132,16 @@ export default function AdminEditor({ initial }: { initial?: AdminEditorInitial 
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          contentType,
           title,
           date,
-          ctf,
-          category,
-          difficulty,
           tags: tags.split(",").map((t) => t.trim()).filter(Boolean),
           summary,
-          status,
           content,
           slug: slug || undefined,
           images: images.map(({ filename, base64 }) => ({ filename, base64 })),
           draft,
+          ...(isWriteup ? { ctf, category, difficulty, status } : {}),
         }),
       });
       const data = await res.json();
@@ -146,7 +157,10 @@ export default function AdminEditor({ initial }: { initial?: AdminEditorInitial 
     }
   }
 
-  const canPublish = Boolean(title && date && ctf && summary && content) && !submitting;
+  const canPublish =
+    Boolean(title && date && summary && content) && (!isWriteup || Boolean(ctf)) && !submitting;
+
+  const numberLabel = isWriteup ? "CASE" : "NOTE";
 
   return (
     <div className="mt-8 grid gap-8 lg:grid-cols-2">
@@ -160,7 +174,7 @@ export default function AdminEditor({ initial }: { initial?: AdminEditorInitial 
             className={`${inputClass} mt-1.5`}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Login Bypass via SQL Injection"
+            placeholder={isWriteup ? "Login Bypass via SQL Injection" : "What I Learned Debugging a Race Condition"}
           />
           {isEditing ? (
             <p className="mt-1 text-xs text-muted-2">
@@ -193,7 +207,7 @@ export default function AdminEditor({ initial }: { initial?: AdminEditorInitial 
           )}
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className={isWriteup ? "grid grid-cols-2 gap-4" : ""}>
           <div>
             <label className={labelClass}>Date *</label>
             <input
@@ -203,58 +217,62 @@ export default function AdminEditor({ initial }: { initial?: AdminEditorInitial 
               onChange={(e) => setDate(e.target.value)}
             />
           </div>
-          <div>
-            <label className={labelClass}>CTF / event *</label>
-            <input
-              className={`${inputClass} mt-1.5`}
-              value={ctf}
-              onChange={(e) => setCtf(e.target.value)}
-              placeholder="picoCTF 2026"
-            />
-          </div>
+          {isWriteup && (
+            <div>
+              <label className={labelClass}>CTF / event *</label>
+              <input
+                className={`${inputClass} mt-1.5`}
+                value={ctf}
+                onChange={(e) => setCtf(e.target.value)}
+                placeholder="picoCTF 2026"
+              />
+            </div>
+          )}
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
-          <div>
-            <label className={labelClass}>Category</label>
-            <select
-              className={`${inputClass} mt-1.5`}
-              value={category}
-              onChange={(e) => setCategory(e.target.value as Category)}
-            >
-              {Object.entries(CATEGORY_LABELS).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
+        {isWriteup && (
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <label className={labelClass}>Category</label>
+              <select
+                className={`${inputClass} mt-1.5`}
+                value={category}
+                onChange={(e) => setCategory(e.target.value as Category)}
+              >
+                {Object.entries(CATEGORY_LABELS).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className={labelClass}>Difficulty</label>
+              <select
+                className={`${inputClass} mt-1.5`}
+                value={difficulty}
+                onChange={(e) => setDifficulty(e.target.value as Difficulty)}
+              >
+                {Object.entries(DIFFICULTY_LABELS).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className={labelClass}>Status</label>
+              <select
+                className={`${inputClass} mt-1.5`}
+                value={status}
+                onChange={(e) => setStatus(e.target.value as Status)}
+              >
+                <option value="solved">Solved</option>
+                <option value="wip">In progress</option>
+              </select>
+            </div>
           </div>
-          <div>
-            <label className={labelClass}>Difficulty</label>
-            <select
-              className={`${inputClass} mt-1.5`}
-              value={difficulty}
-              onChange={(e) => setDifficulty(e.target.value as Difficulty)}
-            >
-              {Object.entries(DIFFICULTY_LABELS).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className={labelClass}>Status</label>
-            <select
-              className={`${inputClass} mt-1.5`}
-              value={status}
-              onChange={(e) => setStatus(e.target.value as Status)}
-            >
-              <option value="solved">Solved</option>
-              <option value="wip">In progress</option>
-            </select>
-          </div>
-        </div>
+        )}
 
         <div>
           <label className={labelClass}>Tags (comma-separated)</label>
@@ -262,7 +280,7 @@ export default function AdminEditor({ initial }: { initial?: AdminEditorInitial 
             className={`${inputClass} mt-1.5`}
             value={tags}
             onChange={(e) => setTags(e.target.value)}
-            placeholder="sqli, auth-bypass, web"
+            placeholder={isWriteup ? "sqli, auth-bypass, web" : "career, opinion, tooling"}
           />
         </div>
 
@@ -278,20 +296,25 @@ export default function AdminEditor({ initial }: { initial?: AdminEditorInitial 
               Save as draft
             </span>
             <br />
-            Commits the file, but it won&apos;t appear on the home page, case
-            log, tag cloud, or sitemap — not even by direct URL — until you
-            come back and uncheck this.
+            Commits the file, but it won&apos;t appear on any public page —
+            not even by direct URL — until you come back and uncheck this.
           </span>
         </label>
 
         <div>
-          <label className={labelClass}>Summary * (shown on the case-log card)</label>
+          <label className={labelClass}>
+            Summary * (shown on the {isWriteup ? "case log" : "field notes"} card)
+          </label>
           <textarea
             className={`${inputClass} mt-1.5`}
             rows={2}
             value={summary}
             onChange={(e) => setSummary(e.target.value)}
-            placeholder="One or two sentences — this is the redacted excerpt on the case log."
+            placeholder={
+              isWriteup
+                ? "One or two sentences — this is the redacted excerpt on the case log."
+                : "One or two sentences shown on the field notes list."
+            }
           />
         </div>
 
@@ -300,7 +323,7 @@ export default function AdminEditor({ initial }: { initial?: AdminEditorInitial 
           <label className={labelClass}>Images</label>
           <label className="mt-1.5 flex cursor-pointer items-center justify-center gap-2 rounded border border-dashed border-line py-4 text-sm text-muted hover:border-stamp-dim hover:text-paper">
             <UploadCloud size={16} />
-            Click to upload screenshots
+            Click to upload images
             <input
               type="file"
               accept="image/*"
@@ -346,8 +369,11 @@ export default function AdminEditor({ initial }: { initial?: AdminEditorInitial 
           )}
           <p className="mt-1.5 text-xs text-muted-2">
             Uploading commits each image to{" "}
-            <code className="font-code">public/writeups/{slug || "your-slug"}/</code>. Click
-            &quot;Insert&quot; to drop the markdown reference into your content at the cursor.
+            <code className="font-code">
+              public/{imageBaseDir}/{slug || "your-slug"}/
+            </code>
+            . Click &quot;Insert&quot; to drop the markdown reference into your
+            content at the cursor.
           </p>
         </div>
 
@@ -359,7 +385,11 @@ export default function AdminEditor({ initial }: { initial?: AdminEditorInitial 
             rows={20}
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            placeholder={"## Challenge overview\n\nPaste or write your writeup here..."}
+            placeholder={
+              isWriteup
+                ? "## Challenge overview\n\nPaste or write your writeup here..."
+                : "## Intro\n\nPaste or write your note here..."
+            }
           />
         </div>
 
@@ -377,8 +407,10 @@ export default function AdminEditor({ initial }: { initial?: AdminEditorInitial 
             "Save draft"
           ) : isEditing ? (
             "Save changes"
-          ) : (
+          ) : isWriteup ? (
             "Publish case file"
+          ) : (
+            "Publish note"
           )}
         </button>
 
@@ -424,10 +456,10 @@ export default function AdminEditor({ initial }: { initial?: AdminEditorInitial 
         <p className={labelClass}>Live preview</p>
         <div className="mt-1.5 max-h-[80vh] overflow-y-auto rounded border border-line bg-panel/20 p-5">
           <p className="font-display text-xs tracking-[0.12em] text-stamp">
-            {slug ? `CASE — ${slug}` : "CASE —"}
+            {slug ? `${numberLabel} — ${slug}` : `${numberLabel} —`}
           </p>
           <h2 className="mt-1 font-display text-xl font-semibold text-paper">
-            {title || "Untitled case"}
+            {title || `Untitled ${isWriteup ? "case" : "note"}`}
           </h2>
           <div
             className="prose-case mt-4 max-w-none"

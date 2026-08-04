@@ -30,7 +30,7 @@ export default function AdminNewPage() {
         </div>
         <LogoutButton />
       </div>
-      <AdminEditor />
+      <AdminEditor contentType="writeup" />
     </div>
   );
 }

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { getAllWriteups } from "@/lib/writeups";
-import AdminDashboard from "@/components/AdminDashboard";
+import { CATEGORY_LABELS } from "@/lib/types";
+import AdminDashboard, { type DashboardItem } from "@/components/AdminDashboard";
 import LogoutButton from "@/components/LogoutButton";
 
 export const metadata: Metadata = {
@@ -17,6 +19,17 @@ export default function AdminPage() {
   // them here — same "reflects the last deploy" snapshot model as before.
   const writeups = getAllWriteups({ includeDrafts: true });
 
+  const items: DashboardItem[] = writeups.map((w) => ({
+    slug: w.slug,
+    title: w.title,
+    draft: w.draft,
+    number: w.caseNumber,
+    metaLine: `${CATEGORY_LABELS[w.category]} · ${w.ctf} · ${w.date}`,
+    tags: w.tags,
+    category: CATEGORY_LABELS[w.category],
+    status: w.status,
+  }));
+
   return (
     <div className="mx-auto max-w-4xl px-5 py-10 sm:px-8 sm:py-14">
       <div className="flex items-start justify-between gap-4">
@@ -27,10 +40,21 @@ export default function AdminPage() {
           <h1 className="mt-3 font-display text-2xl font-bold text-paper sm:text-3xl">
             Admin dashboard
           </h1>
+          <div className="mt-3 flex gap-2">
+            <span className="rounded-sm border border-stamp bg-stamp/15 px-2.5 py-1 font-display text-[11px] uppercase tracking-[0.1em] text-stamp-bright">
+              Case Files
+            </span>
+            <Link
+              href="/admin/notes"
+              className="rounded-sm border border-line px-2.5 py-1 font-display text-[11px] uppercase tracking-[0.1em] text-muted hover:border-stamp-dim hover:text-paper"
+            >
+              Field Notes
+            </Link>
+          </div>
         </div>
         <LogoutButton />
       </div>
-      <AdminDashboard initialWriteups={writeups} />
+      <AdminDashboard contentType="writeup" initialItems={items} />
     </div>
   );
 }

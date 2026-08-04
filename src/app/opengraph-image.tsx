@@ -7,8 +7,7 @@ export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 export default async function Image() {
-  const fontText = `${site.brand}${site.name}${site.tagline}`;
-  const fontData = await loadPlexMonoFont(fontText);
+  const fontData = await loadPlexMonoFont();
 
   return new ImageResponse(
     (

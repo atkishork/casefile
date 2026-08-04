@@ -12,7 +12,7 @@ import { isValidSessionToken, SESSION_COOKIE_NAME } from "@/lib/session";
 // long random password — it doubles as the session-signing secret.
 
 export const config = {
-  matcher: ["/admin/:path*", "/api/publish/:path*", "/api/writeups/:path*"],
+  matcher: ["/admin/:path*", "/api/publish/:path*", "/api/writeups/:path*", "/api/notes/:path*"],
 };
 
 export function proxy(req: NextRequest) {

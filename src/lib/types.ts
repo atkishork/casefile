@@ -58,3 +58,24 @@ export interface Achievement {
   /** Optional link to a certificate — PDF, image, or a verification page (e.g. Credly). */
   certificateUrl?: string;
 }
+
+// ---------------------------------------------------------------------------
+// Field Notes — blog posts / written notes. Simpler than a Writeup: no CTF
+// category, difficulty, or solved/wip status, just title/date/tags/summary.
+// ---------------------------------------------------------------------------
+
+export interface NoteFrontmatter {
+  title: string;
+  date: string;
+  tags: string[];
+  summary: string;
+  draft?: boolean;
+}
+
+export interface Note extends NoteFrontmatter {
+  slug: string;
+  noteNumber: number;
+  readingMinutes: number;
+  content: string;
+  draft: boolean;
+}

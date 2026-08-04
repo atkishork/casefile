@@ -42,8 +42,10 @@ export const about = {
     "CIA Triad",
     "Network security basics",
     "Threat modeling",
+    "Secure SDLC",
     "Java (OOP)",
     "Python",
+    "NVD API integration",
     "MITRE ATT&CK mapping",
   ],
   // "Tools" — icon + 5-star proficiency rating each. `icon` is optional:

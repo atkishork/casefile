@@ -22,8 +22,7 @@ export default async function Image({ params }: { params: Promise<{ slug: string
   const category = writeup ? CATEGORY_LABELS[writeup.category] : "";
   const ctf = writeup?.ctf ?? "";
 
-  const fontText = `${title}${caseLabel}${category}${ctf}${site.brand}0123456789`;
-  const fontData = await loadPlexMonoFont(fontText);
+  const fontData = await loadPlexMonoFont();
 
   return new ImageResponse(
     (

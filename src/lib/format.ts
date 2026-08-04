@@ -2,6 +2,10 @@ export function padCase(n: number): string {
   return `CASE-${String(n).padStart(3, "0")}`;
 }
 
+export function padNote(n: number): string {
+  return `NOTE-${String(n).padStart(3, "0")}`;
+}
+
 export function formatDate(iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
