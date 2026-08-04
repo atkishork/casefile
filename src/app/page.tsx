@@ -1,12 +1,15 @@
 import Link from "next/link";
 import { ArrowRight, ArrowDown } from "lucide-react";
 import { getAllWriteups } from "@/lib/writeups";
+import { getAllNotes } from "@/lib/notes";
 import { site, about } from "@/lib/config";
 import { padCase, formatDate } from "@/lib/format";
 import CaseCard from "@/components/CaseCard";
+import NoteCard from "@/components/NoteCard";
 
 export default function Home() {
   const writeups = getAllWriteups();
+  const notes = getAllNotes();
   const solvedCount = writeups.filter((w) => w.status === "solved").length;
   const categories = Array.from(new Set(writeups.map((w) => w.category)));
   const latest = writeups[0];
@@ -115,6 +118,41 @@ export default function Home() {
             ))}
           </div>
         )}
+      </section>
+
+      {/* ---------------------------------------------------------------- */}
+      {/* Recent field notes                                                */}
+      {/* ---------------------------------------------------------------- */}
+      <section className="border-t border-line">
+        <div className="mx-auto max-w-5xl px-5 py-16 sm:px-8">
+          <div className="flex items-end justify-between gap-4">
+            <h2 className="font-display text-lg font-semibold uppercase tracking-[0.1em] text-paper">
+              Recent field notes
+            </h2>
+            <Link
+              href="/notes"
+              className="font-display text-xs uppercase tracking-[0.1em] text-muted hover:text-stamp-bright"
+            >
+              View all →
+            </Link>
+          </div>
+
+          {notes.length === 0 ? (
+            <div className="mt-8 rounded border border-dashed border-line p-8 text-center text-sm text-muted">
+              No notes yet. Drop a markdown file in{" "}
+              <code className="rounded bg-panel px-1.5 py-0.5 font-code text-xs">
+                content/notes/
+              </code>{" "}
+              or use <code className="rounded bg-panel px-1.5 py-0.5 font-code text-xs">/admin/notes/new</code>.
+            </div>
+          ) : (
+            <div className="mt-8 grid gap-5 sm:grid-cols-2">
+              {notes.slice(0, 4).map((n, i) => (
+                <NoteCard key={n.slug} note={n} index={i} />
+              ))}
+            </div>
+          )}
+        </div>
       </section>
 
       {/* ---------------------------------------------------------------- */}
